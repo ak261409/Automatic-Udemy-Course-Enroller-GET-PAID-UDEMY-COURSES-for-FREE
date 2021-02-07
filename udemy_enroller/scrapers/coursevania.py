@@ -27,7 +27,7 @@ class CoursevaniaScraper(BaseScraper):
             self.set_state_disabled()
         self.last_page = None
         self.max_pages = max_pages
-    
+
     @BaseScraper.time_run
     async def run(self) -> List:
         """
@@ -41,7 +41,7 @@ class CoursevaniaScraper(BaseScraper):
         )
         self.max_pages_reached()
         return links
-    
+
     async def get_links(self):
         """
         Scrape udemy links from coursevania.com
@@ -50,14 +50,14 @@ class CoursevaniaScraper(BaseScraper):
         """
         self.current_page += 1
         course_links = await self.get_course_links()
-        
+
         links = await self.gather_udemy_course_links(course_links)
 
         for counter, course in enumerate(links):
             logger.debug(f"Received Link {counter + 1} : {course}")
-        
+
         return links
-    
+
     async def get_course_links(self) -> List:
         """
         Gets the url of pages which contain the udemy link we want to get
@@ -66,26 +66,28 @@ class CoursevaniaScraper(BaseScraper):
         :return: list of pages on coursevania.com that contain Udemy coupons
         """
         query_params = {
-            'offset': self.current_page - 1,
-            'template': 'courses/grid',
-            'args': '{"image_d":"img-480-380","per_row":"4","posts_per_page":"12","class":"archive_grid"}',
-            'action': 'stm_lms_load_content',
-            'sort': 'date_high',
+            "offset": self.current_page - 1,
+            "template": "courses/grid",
+            "args": '{"image_d":"img-480-380","per_row":"4","posts_per_page":"12","class":"archive_grid"}',
+            "action": "stm_lms_load_content",
+            "sort": "date_high",
         }
         headers = {
-            'Host': 'coursevania.com',
-            'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0',
-            'Accept': 'application/json, text/javascript, */*; q=0.01',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Connection': 'keep-alive',
-            'Referer': 'https://coursevania.com/courses/',
-            'Cookie': '__cfduid=d022269be97a5d35b1db7c0195a0a1c091611526580',
-            'TE': 'Trailers',
+            "Host": "coursevania.com",
+            "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:85.0) Gecko/20100101 Firefox/85.0",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip, deflate, br",
+            "X-Requested-With": "XMLHttpRequest",
+            "Connection": "keep-alive",
+            "Referer": "https://coursevania.com/courses/",
+            "Cookie": "__cfduid=d022269be97a5d35b1db7c0195a0a1c091611526580",
+            "TE": "Trailers",
         }
         query_string = urlencode(query_params)
-        response = await get(f"{self.DOMAIN}/wp-admin/admin-ajax.php?{query_string}", headers=headers)
+        response = await get(
+            f"{self.DOMAIN}/wp-admin/admin-ajax.php?{query_string}", headers=headers
+        )
         if response is not None:
             json_data = json.loads(response)
             coupons_data = json_data.get("content")
@@ -96,7 +98,7 @@ class CoursevaniaScraper(BaseScraper):
             self.last_page = json_data.get("pages")
 
             return course_links
-    
+
     @staticmethod
     async def get_udemy_course_link(url: str) -> str:
         """
@@ -112,7 +114,7 @@ class CoursevaniaScraper(BaseScraper):
                 soup.find("div", class_="stm-lms-buy-buttons").find("a").get("href")
             )
             return udemy_link
-    
+
     async def gather_udemy_course_links(self, courses: List[str]):
         """
         Async fetching of the udemy course links from coursevania.com
